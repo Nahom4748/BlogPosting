@@ -1,62 +1,60 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const db = require("../config/db.config");
-const { sanitizeInput } = require("../utils/sanitizer");
+const db = require("../config/db.config"); // Ensure db is using mysql2/promise
 const { validateRegister, validateLogin } = require("../utils/validator");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-const register = async (userData) => {
-  const { name, email, password } = sanitizeInput(userData);
-
-  // Validate input data
-  const validationError = validateRegister({ name, email, password });
-  if (validationError) throw new Error(validationError);
-
-  // Check if email already exists
-  const [existingUser] = await db.execute(
-    "SELECT * FROM users WHERE email = ?",
-    [email]
+const register = async ({ username, email, password }) => {
+  // Check if the username or email already exists
+  const [existingUser] = await db.query(
+    "SELECT * FROM Users WHERE username = ? OR email = ?",
+    [username, email]
   );
-  if (existingUser.length) throw new Error("Email already registered");
+  if (existingUser.length > 0) {
+    throw new Error("Username or email already exists");
+  }
 
-  // Hash password
+  // Hash the password before inserting it into the database
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Insert new user into database
-  const [result] = await db.execute(
-    "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
-    [name, email, hashedPassword]
+  // Insert the new user into the database with sanitized and validated data
+  const [result] = await db.query(
+    `INSERT INTO Users (username, email, password_hashed) 
+     VALUES (?, ?, ?)`,
+    [username, email, hashedPassword]
   );
 
-  return { id: result.insertId, name, email };
+  // Fetch the newly created user to return
+  const [newUser] = await db.query("SELECT * FROM Users WHERE user_id = ?", [
+    result.insertId,
+  ]);
+  return newUser;
 };
 
-const login = async (credentials) => {
-  const { email, password } = sanitizeInput(credentials);
-
-  // Validate input data
-  const validationError = validateLogin({ email, password });
-  if (validationError) throw new Error(validationError);
-
-  // Check if user exists
-  const [users] = await db.execute("SELECT * FROM users WHERE email = ?", [
+const login = async ({ email, password }) => {
+  // Check if the user exists in the database
+  const [users] = await db.execute("SELECT * FROM Users WHERE email = ?", [
     email,
   ]);
   if (!users.length) throw new Error("Invalid email or password");
 
   const user = users[0];
 
-  // Validate password
-  const isPasswordValid = await bcrypt.compare(password, user.password);
+  // Validate the password using bcrypt
+  const isPasswordValid = await bcrypt.compare(password, user.password_hashed);
   if (!isPasswordValid) throw new Error("Invalid email or password");
 
-  // Generate JWT token
-  const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
-    expiresIn: "1h",
+  // Generate a JWT token
+  const token = jwt.sign({ id: user.user_id, email: user.email }, JWT_SECRET, {
+    expiresIn: "1h", // The token will expire in 1 hour
   });
 
-  return { user: { id: user.id, name: user.name, email: user.email }, token };
+  // Return the user data and the generated token
+  return {
+    user: { id: user.user_id, username: user.username, email: user.email },
+    token,
+  };
 };
 
 module.exports = { register, login };

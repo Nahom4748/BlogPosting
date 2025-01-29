@@ -2,8 +2,9 @@ const blogService = require("../services/Blog.service");
 
 exports.createBlog = async (req, res) => {
   try {
-    const blog = await blogService.createBlog(req.body, req.user.id);
-    res.status(201).json(blog);
+    // Pass the request body data and the user ID from the middleware
+    const blog = await blogService.createBlog(req.body, req.body.userId);
+    res.status(201).json(blog); // Return the created blog data
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

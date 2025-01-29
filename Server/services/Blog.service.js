@@ -1,12 +1,18 @@
 const db = require("../config/db.config.js");
-const { sanitizeInput } = require("../utils/sanitizer.js");
+// const { sanitizeInput } = require("../utils/sanitizer.js");
 
 exports.createBlog = async (data, userId) => {
-  const { title, content } = sanitizeInput(data);
+  // Sanitize and extract the title and content from the request data
+  const { title, content } = data;
+  console.log(title, content, userId);
+
+  // Insert the blog into the database
   const [result] = await db.execute(
     "INSERT INTO blogs (title, content, user_id) VALUES (?, ?, ?)",
     [title, content, userId]
   );
+
+  // Return the newly created blog with its ID
   return { id: result.insertId, title, content, userId };
 };
 

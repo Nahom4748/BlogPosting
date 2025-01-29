@@ -1,10 +1,5 @@
 const sanitizeHtml = require("sanitize-html");
 
-/**
- * Sanitizes input fields by removing malicious content.
- * @param {Object} inputData - Object containing user input.
- * @returns {Object} - Sanitized input object.
- */
 const sanitizeInput = (inputData) => {
   let sanitizedData = {};
 
