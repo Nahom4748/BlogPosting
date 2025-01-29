@@ -4,8 +4,9 @@ CREATE TABLE IF NOT EXISTS `Users` (
     `username` VARCHAR(50) NOT NULL UNIQUE,
     `email` VARCHAR(100) NOT NULL UNIQUE,
     `password_hashed` VARCHAR(255) NOT NULL,
-    ` bio` TEXT DEFAULT NULL,
-  `profile_picture` VARCHAR(255) DEFAULT NULL,
+  `bio` TEXT DEFAULT NULL,
+    `role` VARCHAR(50) DEFAULT 'user', -- Default role is 'user'
+    `profile_picture` VARCHAR(255) DEFAULT NULL, -- To store image path
     `added_date` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `updated_date` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

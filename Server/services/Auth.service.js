@@ -5,9 +5,15 @@ const { validateRegister, validateLogin } = require("../utils/validator");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-const register = async ({ username, email, password }) => {
+const register = async ({
+  username,
+  email,
+  password,
+  role = "user",
+  profile_picture,
+}) => {
   // Check if the username or email already exists
-  const [existingUser] = await db.query(
+  const [existingUser] = await db.execute(
     "SELECT * FROM Users WHERE username = ? OR email = ?",
     [username, email]
   );
@@ -19,14 +25,14 @@ const register = async ({ username, email, password }) => {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   // Insert the new user into the database with sanitized and validated data
-  const [result] = await db.query(
-    `INSERT INTO Users (username, email, password_hashed) 
-     VALUES (?, ?, ?)`,
-    [username, email, hashedPassword]
+  const [result] = await db.execute(
+    `INSERT INTO Users (username, email, password_hashed, role, profile_picture) 
+     VALUES (?, ?, ?, ?, ?)`,
+    [username, email, hashedPassword, role, profile_picture]
   );
 
   // Fetch the newly created user to return
-  const [newUser] = await db.query("SELECT * FROM Users WHERE user_id = ?", [
+  const [newUser] = await db.execute("SELECT * FROM Users WHERE user_id = ?", [
     result.insertId,
   ]);
   return newUser;

@@ -3,8 +3,13 @@ const authService = require("../services/Auth.service");
 
 const register = async (req, res) => {
   try {
-    const { username, email, password } = req.body; // Send plain password, not hashed
-    console.log(username, email, password);
+    const { username, email, password, role } = req.body;
+    let profilePicture = null;
+
+    // If there is a file uploaded, assign its path
+    if (req.file) {
+      profilePicture = req.file.path; // The file path where the image is stored
+    }
 
     // Ensure all required fields are provided
     if (!username || !email || !password) {
@@ -14,7 +19,13 @@ const register = async (req, res) => {
     }
 
     // Pass the data to the authService to handle registration logic
-    const user = await authService.register({ username, email, password });
+    const user = await authService.register({
+      username,
+      email,
+      password,
+      role: role || "user", // Default to 'user' role
+      profile_picture: profilePicture,
+    });
 
     res.status(201).json({
       message: "User registered successfully",
