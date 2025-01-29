@@ -1,9 +1,10 @@
-const router = require("express").Router();
+const express = require("express");
 const blogController = require("../controllers/blogController");
 const authMiddleware = require("../middlewares/auth.middleware");
 
-router.route("/").post(authMiddleware, blogController.createBlog);
+const router = express.Router();
 
+router.route("/").post(authMiddleware, blogController.createBlog);
 router
   .route("/:id")
   .get(blogController.getBlog)
@@ -14,4 +15,4 @@ router.route("/:id/ratings").post(authMiddleware, blogController.rateBlog);
 
 router.route("/:id/comments").post(authMiddleware, blogController.addComment);
 
-export default router;
+module.exports = router;

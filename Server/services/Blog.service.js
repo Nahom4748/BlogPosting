@@ -1,21 +1,49 @@
-const { Blog } = require("../models");
+const db = require("../config/db.config.js");
+const { sanitizeInput } = require("../utils/sanitizer.js");
 
-class BlogService {
-  static async createBlog(userId, blogData) {
-    return await Blog.create({ ...blogData, UserID: userId });
-  }
+exports.createBlog = async (data, userId) => {
+  const { title, content } = sanitizeInput(data);
+  const [result] = await db.execute(
+    "INSERT INTO blogs (title, content, user_id) VALUES (?, ?, ?)",
+    [title, content, userId]
+  );
+  return { id: result.insertId, title, content, userId };
+};
 
-  static async updateBlog(blogId, userId, updateData) {
-    const blog = await Blog.findByPk(blogId);
-    if (blog.UserID !== userId) throw new Error("Unauthorized");
-    return await blog.update(updateData);
-  }
+exports.updateBlog = async (id, data, userId) => {
+  const { title, content } = sanitizeInput(data);
+  await db.execute(
+    "UPDATE blogs SET title = ?, content = ? WHERE id = ? AND user_id = ?",
+    [title, content, id, userId]
+  );
+  return { id, title, content, userId };
+};
 
-  static async getBlogWithComments(blogId) {
-    return await Blog.findByPk(blogId, {
-      include: ["comments", "ratings"],
-    });
-  }
-}
+exports.deleteBlog = async (id, userId) => {
+  await db.execute("DELETE FROM blogs WHERE id = ? AND user_id = ?", [
+    id,
+    userId,
+  ]);
+};
 
-module.exports = BlogService;
+exports.getBlog = async (id) => {
+  const [rows] = await db.execute("SELECT * FROM blogs WHERE id = ?", [id]);
+  return rows[0];
+};
+
+exports.rateBlog = async (blogId, rating, userId) => {
+  await db.execute(
+    "INSERT INTO ratings (blog_id, rating, user_id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE rating = ?",
+    [blogId, rating, userId, rating]
+  );
+  return { blogId, rating, userId };
+};
+
+exports.addComment = async (blogId, comment, userId) => {
+  const sanitizedComment = sanitizeInput({ comment }).comment;
+  const [result] = await db.execute(
+    "INSERT INTO comments (blog_id, comment, user_id) VALUES (?, ?, ?)",
+    [blogId, sanitizedComment, userId]
+  );
+  return { id: result.insertId, blogId, comment: sanitizedComment, userId };
+};
