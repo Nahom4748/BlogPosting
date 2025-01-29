@@ -1,40 +1,26 @@
-const db = require("../config/db");
+const { Blog, Comment, BlogRating } = require("../models");
+const BlogService = require("../services/Blog.service");
 
-exports.createBlog = (req, res) => {
-  const { title, content } = req.body;
-  const sql = "INSERT INTO blogs (user_id, title, content) VALUES (?, ?, ?)";
-
-  db.query(sql, [req.user.id, title, content], (err) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.status(201).json({ message: "Blog created" });
-  });
+exports.createBlog = async (req, res) => {
+  try {
+    const blog = await BlogService.createBlog(req.user.UserID, req.body);
+    res.status(201).json(blog);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 };
 
-exports.getBlogs = (req, res) => {
-  const sql = "SELECT * FROM blogs";
-
-  db.query(sql, (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(results);
-  });
+exports.updateBlog = async (req, res) => {
+  try {
+    const updatedBlog = await BlogService.updateBlog(
+      req.params.id,
+      req.user.UserID,
+      req.body
+    );
+    res.json(updatedBlog);
+  } catch (error) {
+    res.status(403).json({ error: error.message });
+  }
 };
 
-exports.getBlogById = (req, res) => {
-  const sql = "SELECT * FROM blogs WHERE id = ?";
-
-  db.query(sql, [req.params.id], (err, result) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(result[0]);
-  });
-};
-
-exports.deleteBlog = (req, res) => {
-  const sql = "DELETE FROM blogs WHERE id = ? AND user_id = ?";
-
-  db.query(sql, [req.params.id, req.user.id], (err, result) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (result.affectedRows === 0)
-      return res.status(403).json({ error: "Not authorized" });
-    res.json({ message: "Blog deleted" });
-  });
-};
+// Add similar methods for delete, get, ratings, comments

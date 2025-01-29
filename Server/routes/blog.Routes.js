@@ -1,16 +1,17 @@
-const express = require("express");
-const { authenticateToken } = require("../middlewares/auth");
-const {
-  createBlog,
-  getBlogs,
-  getBlogById,
-  deleteBlog,
-} = require("../controllers/blogController");
-const router = express.Router();
+const router = require("express").Router();
+const blogController = require("../controllers/blogController");
+const authMiddleware = require("../middlewares/auth.middleware");
 
-router.post("/", authenticateToken, createBlog);
-router.get("/", getBlogs);
-router.get("/:id", getBlogById);
-router.delete("/:id", authenticateToken, deleteBlog);
+router.route("/").post(authMiddleware, blogController.createBlog);
 
-module.exports = router;
+router
+  .route("/:id")
+  .get(blogController.getBlog)
+  .put(authMiddleware, blogController.updateBlog)
+  .delete(authMiddleware, blogController.deleteBlog);
+
+router.route("/:id/ratings").post(authMiddleware, blogController.rateBlog);
+
+router.route("/:id/comments").post(authMiddleware, blogController.addComment);
+
+export default router;
