@@ -5,6 +5,7 @@ const helmet = require("helmet");
 
 const authRoutes = require("./routes/auth.Routes");
 const blogRoutes = require("./routes/blog.Routes");
+const profile = require("./routes/profile.Routes");
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use(express.json());
 // Routes
 app.use("/auth", authRoutes);
 app.use("/blogs", blogRoutes);
+app.use("/profile", profile);
 
 // Start the server
 const PORT = process.env.PORT || 5000;
