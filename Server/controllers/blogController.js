@@ -24,8 +24,8 @@ exports.updateBlog = async (req, res) => {
 
 exports.deleteBlog = async (req, res) => {
   try {
-    await blogService.deleteBlog(req.params.id, req.user.id);
-    res.status(204).send();
+    const result = await blogService.deleteBlog(req.params.id, req.user.id);
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -42,12 +42,18 @@ exports.getBlog = async (req, res) => {
 
 exports.rateBlog = async (req, res) => {
   try {
-    const rating = await blogService.rateBlog(
-      req.params.id,
-      req.body.rating,
-      req.user.id
-    );
-    res.status(200).json(rating);
+    const { id } = req.params;
+    const { rating } = req.body;
+    const userId = req.user.id;
+
+    if (rating < 1 || rating > 5) {
+      return res
+        .status(400)
+        .json({ message: "Rating must be between 1 and 5." });
+    }
+
+    const result = await blogService.rateBlog(id, rating, userId);
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
